@@ -89,7 +89,7 @@ module Celluloid
         state.tasks = tasks.to_a.map { |t| TaskState.new(t.class, t.type, t.meta, t.status, t.backtrace) }
       end
 
-      state.backtrace = actor.thread.backtrace if actor.thread
+      state.backtrace = actor.backtrace
       state
     end
 

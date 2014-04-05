@@ -45,6 +45,8 @@ module Celluloid
 
       create do
         begin
+          thread = Thread.current
+          @backtrace = lambda { thread.backtrace }
           @status = :running
           actor.setup_thread
 
@@ -84,7 +86,11 @@ module Celluloid
         Logger.warn [warning, *caller[2..8]].join("\n\t")
       end
 
+      backtrace = caller
+      @backtrace = lambda { backtrace }
       value = signal
+      thread = Thread.current
+      @backtrace= lambda { thread.backtrace }
 
       @status = :running
       raise value if value.is_a?(Celluloid::ResumableError)
@@ -95,9 +101,12 @@ module Celluloid
     # Resume a suspended task, giving it a value to return if needed
     def resume(value = nil)
       guard "Cannot resume a task from inside of a task" if Thread.current[:celluloid_task]
+      @caller_backtrace = caller
       deliver(value)
       nil
     end
+
+    attr_reader :caller_backtrace
 
     # Execute a code block in exclusive mode.
     def exclusive
@@ -133,6 +142,7 @@ module Celluloid
     end
 
     def backtrace
+      @backtrace.call
     end
 
     # Is the current task still running?

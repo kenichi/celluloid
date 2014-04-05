@@ -406,6 +406,20 @@ module Celluloid
       Logger.crash("#{@subject.class}: CLEANUP CRASHED!", ex)
     end
 
+    def backtrace
+      if task = active_task
+        task.caller_backtrace
+      else
+        @thread.backtrace if @thread
+      end
+    end
+
+    def active_task
+      @tasks.to_a.find do |task|
+        task.status == :running
+      end
+    end
+
     # Run a method inside a task unless it's exclusive
     def task(task_type, meta = nil)
       method_name = meta && meta.fetch(:method_name, nil)
